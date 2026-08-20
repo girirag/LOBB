@@ -30,7 +30,6 @@ app = FastAPI(
     title=settings.APP_NAME,
     description="A high-performance URL shortener API built with FastAPI and PostgreSQL.",
     version="1.0.0",
-    lifespan=lifespan,
 )
 
 
