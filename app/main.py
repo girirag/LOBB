@@ -13,8 +13,12 @@ import app.crud as crud
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: ensure tables exist
-    await init_db()
+    # Startup: ensure tables exist safely
+    try:
+        await init_db()
+    except Exception as e:
+        import logging
+        logging.warning(f"Database init warning: {e}")
     yield
     # Shutdown: clean up if necessary
 
