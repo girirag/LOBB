@@ -14,6 +14,12 @@ class Settings(BaseSettings):
     # Database URL
     DATABASE_URL: str = "sqlite+aiosqlite:///./urlshortener.db"
 
+    # Supabase HTTP / REST configuration
+    SUPABASE_URL: str = "https://apdlqeorlszyqyppawwl.supabase.co"
+    SUPABASE_KEY: str = ""
+    SUPABASE_SECRET_KEY: str = ""
+    SUPABASE_PUBLISHABLE_KEY: str = ""
+
     # Short code configuration
     SHORT_CODE_LENGTH: int = 6
 
