@@ -5,14 +5,23 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.pool import NullPool
 from app.config import get_settings
 
 settings = get_settings()
 
+engine_kwargs = {
+    "echo": settings.DEBUG and settings.APP_ENV != "production",
+    "future": True,
+}
+
+if settings.is_vercel:
+    # NullPool prevents stale connections and loop mismatch in serverless environments
+    engine_kwargs["poolclass"] = NullPool
+
 engine = create_async_engine(
     settings.async_database_url,
-    echo=settings.DEBUG and settings.APP_ENV != "production",
-    future=True,
+    **engine_kwargs
 )
 
 AsyncSessionLocal = async_sessionmaker(
