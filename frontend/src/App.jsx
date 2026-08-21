@@ -216,7 +216,7 @@ function App() {
                     placeholder="e.g. my-promo-link"
                     value={customCode}
                     onChange={(e) => setCustomCode(e.target.value)}
-                    pattern="[a-zA-Z0-9_-]{3,32}"
+                    pattern="[A-Za-z0-9_\-]{3,32}"
                     title="3-32 letters, numbers, hyphens, or underscores"
                   />
                 </div>
