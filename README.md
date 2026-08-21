@@ -1,187 +1,100 @@
-# URL Shortener API (FastAPI + PostgreSQL)
+# URL Shortener (ZipLink) — Full Stack
 
-A high-performance, asynchronous URL Shortener REST API built with **FastAPI**, **SQLAlchemy 2.0**, and **PostgreSQL**.
-
----
-
-## Features
-
-- 🚀 **FastAPI & Async I/O**: High-throughput asynchronous endpoints using `asyncpg`.
-- 🗄️ **PostgreSQL & SQLAlchemy 2.0**: Modern async ORM mappings with full schema support.
-- ✂️ **Automatic & Custom Short Codes**: Base62 collision-resistant random codes or user-defined aliases.
-- 🔗 **HTTP 307 Redirects**: Seamless redirection to original URLs.
-- 📊 **Analytics & Tracking**: Tracks and increments click counts for shortened links.
-- 🛡️ **Pydantic v2 Validation**: Comprehensive URL structure and input sanitization.
-- 🧪 **Automated Testing Suite**: Full `pytest-asyncio` coverage with isolated in-memory testing.
-- 🐳 **Docker Compose Ready**: One-command PostgreSQL setup.
+A high-performance, full-stack URL Shortener built with **FastAPI & PostgreSQL** (Backend) and **React & Vite** (Frontend), architected for **Render.com + Vercel** deployment.
 
 ---
 
 ## Project Structure
 
 ```
-url-shortener-api/
-├── app/
-│   ├── __init__.py
-│   ├── config.py          # Environment settings via Pydantic Settings
-│   ├── crud.py            # Database operations (create, query, click counting)
-│   ├── database.py        # Async SQLAlchemy engine & session dependency
-│   ├── main.py            # FastAPI endpoints and lifespan management
-│   ├── models.py          # SQLAlchemy models
-│   ├── schemas.py         # Pydantic request and response schemas
-│   └── utils.py           # Base62 code generator & URL helpers
-├── tests/
-│   ├── __init__.py
-│   ├── conftest.py        # Fixtures with in-memory SQLite isolation
-│   └── test_api.py        # 9+ automated tests covering all flows
-├── .env.example
-├── .env
-├── docker-compose.yml     # PostgreSQL service
-├── pyproject.toml
-├── requirements.txt
+├── backend/                  # FastAPI + PostgreSQL / Supabase
+│   ├── app/
+│   │   ├── config.py         # App configuration & environment parsing
+│   │   ├── crud.py           # Database operations
+│   │   ├── database.py       # Async SQLAlchemy engine & session management
+│   │   ├── main.py           # FastAPI routes & CORS middleware
+│   │   ├── models.py         # SQLAlchemy URL model
+│   │   ├── schemas.py        # Pydantic request/response validation
+│   │   ├── supabase_service.py # Direct Supabase HTTPS client
+│   │   └── utils.py          # Base62 code generator
+│   ├── tests/                # Automated test suite (10/10 tests passing)
+│   ├── Dockerfile            # Container deployment
+│   ├── render.yaml           # Render.com Blueprint
+│   ├── requirements.txt      # Python dependencies
+│   └── .env.example
+│
+├── frontend/                 # React 18 + Vite Web Application
+│   ├── src/
+│   │   ├── App.jsx           # Main UI (Shorten, Copy, Analytics, Recents)
+│   │   ├── index.css         # Modern Dark Glassmorphism Styling
+│   │   └── main.jsx
+│   ├── package.json
+│   ├── vercel.json           # Vercel SPA routing
+│   ├── vite.config.js
+│   └── .env.example
+│
 └── README.md
 ```
 
 ---
 
-## API Endpoints
+## 🚀 Deployment Guide (Render + Vercel)
 
-### 1. Shorten a URL
-- **Endpoint**: `POST /shorten`
-- **Status Code**: `201 Created`
-- **Request Body**:
-```json
-{
-  "url": "https://en.wikipedia.org/wiki/URL_shortening",
-  "custom_code": "wiki-shortener" // Optional
-}
-```
+### Part 1: Deploy Backend to Render.com (2 minutes)
 
-- **Response (201 Created)**:
-```json
-{
-  "short_code": "wiki-shortener",
-  "short_url": "http://localhost:8000/wiki-shortener",
-  "original_url": "https://en.wikipedia.org/wiki/URL_shortening",
-  "created_at": "2026-08-20T14:20:00Z"
-}
-```
+1. Go to **[Render Dashboard](https://dashboard.render.com/)** and click **New +** → **Web Service**.
+2. Connect your GitHub repository (`girirag/LOBB`).
+3. Set the following configuration:
+   - **Name**: `url-shortener-backend`
+   - **Root Directory**: `backend`
+   - **Environment**: `Python 3`
+   - **Build Command**: `pip install -r requirements.txt`
+   - **Start Command**: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+4. Add your Database Environment Variable in **Environment Variables**:
+   - `DATABASE_URL`: `postgresql+asyncpg://postgres:[YOUR-PASSWORD]@db.apdlqeorlszyqyppawwl.supabase.co:5432/postgres`
+   - *(Optional for Supabase HTTPS)*: `SUPABASE_URL` and `SUPABASE_SECRET_KEY`
+5. Click **Create Web Service**.
+6. Copy your Render URL when deployed (e.g. `https://url-shortener-backend-xxxx.onrender.com`).
 
 ---
 
-### 2. Redirect to Original URL
-- **Endpoint**: `GET /{short_code}`
-- **Status Code**: `307 Temporary Redirect`
-- **Behavior**: Redirects client to the original URL and increments the click counter by 1.
-- **Response (404 Not Found)**: Returned if `short_code` does not exist.
+### Part 2: Deploy Frontend to Vercel (1 minute)
+
+1. Go to **[Vercel Dashboard](https://vercel.com/new)** and click **"Add New Project"** → **Import** your repository (`girirag/LOBB`).
+2. In the project setup:
+   - **Root Directory**: Click *Edit* and select **`frontend`**.
+   - **Framework Preset**: `Vite` (auto-detected).
+3. Under **Environment Variables**, add:
+   - **Key**: `VITE_API_BASE_URL`
+   - **Value**: Your Render Backend URL from Part 1 (e.g. `https://url-shortener-backend-xxxx.onrender.com`).
+4. Click **Deploy**.
 
 ---
 
-### 3. Analytics / Stats
-- **Endpoint**: `GET /stats/{short_code}`
-- **Status Code**: `200 OK`
-- **Response**:
-```json
-{
-  "short_code": "wiki-shortener",
-  "original_url": "https://en.wikipedia.org/wiki/URL_shortening",
-  "short_url": "http://localhost:8000/wiki-shortener",
-  "clicks": 42,
-  "created_at": "2026-08-20T14:20:00Z"
-}
-```
+## 💻 Local Development
 
----
-
-### 4. Health Check
-- **Endpoint**: `GET /health`
-- **Response**:
-```json
-{
-  "status": "ok",
-  "database": "healthy"
-}
-```
-
----
-
-## Quick Start & Running
-
-### Option A: Using `uv` (Recommended)
-
-1. **Start PostgreSQL database** (or use Docker):
-   ```bash
-   docker compose up -d
-   ```
-
-2. **Run the FastAPI development server**:
-   ```bash
-   uv run uvicorn app.main:app --reload --port 8000
-   ```
-
-3. **Open Interactive Swagger Documentation**:
-   Visit [http://localhost:8000/docs](http://localhost:8000/docs) in your browser.
-
----
-
-### Option B: Using standard Python Virtual Environment
-
-1. **Create and activate a virtual environment**:
-   ```bash
-   python -m venv .venv
-   # Windows:
-   .venv\Scripts\activate
-   # Linux/macOS:
-   source .venv/bin/activate
-   ```
-
-2. **Install dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. **Start the server**:
-   ```bash
-   uvicorn app.main:app --reload --port 8000
-   ```
-
----
-
-## Running Automated Tests
-
-Run the complete test suite:
+### Run Backend
 ```bash
+cd backend
+uv run uvicorn app.main:app --reload --port 8000
+```
+- API Docs: `http://localhost:8000/docs`
+- Health: `http://localhost:8000/health`
+
+### Run Frontend
+```bash
+cd frontend
+npm install
+npm run dev
+```
+- Web UI: `http://localhost:3000`
+
+---
+
+## 🧪 Running Tests
+
+```bash
+cd backend
 uv run pytest -v
 ```
-or with standard pytest:
-```bash
-pytest -v
-```
-
----
-
-## Example `curl` Commands
-
-**Shorten a URL**:
-```bash
-curl -X POST "http://localhost:8000/shorten" \
-     -H "Content-Type: application/json" \
-     -d "{\"url\": \"https://github.com/fastapi/fastapi\"}"
-```
-
-**Custom Short Code**:
-```bash
-curl -X POST "http://localhost:8000/shorten" \
-     -H "Content-Type: application/json" \
-     -d "{\"url\": \"https://github.com/fastapi/fastapi\", \"custom_code\": \"fastapi\"}"
-```
-
-**Access & Redirect**:
-```bash
-curl -i "http://localhost:8000/fastapi"
-```
-
-**Check Click Analytics**:
-```bash
-curl "http://localhost:8000/stats/fastapi"
-```
+All 10 unit and integration tests covering URL shortening, collision avoidance, 307 redirects, 404s, and analytics pass out-of-the-box.

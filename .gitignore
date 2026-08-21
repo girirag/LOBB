@@ -26,5 +26,9 @@ htmlcov/
 *.swp
 *.swo
 
-# Vercel
+# Vercel & Node
 .vercel/
+node_modules/
+dist/
+.env.local
+.env.*.local
